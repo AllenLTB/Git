@@ -1,8 +1,6 @@
-# Git
-
 [TOC]
 
-此笔记是读[ProGit](https://www.progit.cn/)之后写的，大部分内容（包括图片）都是直接从书中复制下来的。
+**此笔记是读[ProGit](https://www.progit.cn/)之后写的，大部分内容（包括图片）都是直接从书中复制下来的。**
 
 # Git起步
 
@@ -10,12 +8,12 @@
 
 ### 直接记录快照，而非差异比较
 
-Git 和其它版本控制系统（包括 Subversion 和近似工具）的主要差别在于 Git 对待数据的方法。概念上来区分，其它大部分系统以文件变更列表的方式存储信息。这类系统（CVS、Subversion、Perforce、Bazaar 等等）将
+Git和其它版本控制系统（包括 Subversion 和近似工具）的主要差别在于Git对待数据的方法。概念上来区分，其它大部分系统以文件变更列表的方式存储信息。这类系统（CVS、Subversion、Perforce、Bazaar 等等）将
 它们保存的信息看作是一组基本文件和每个文件随时间逐步累积的差异。
 
 ![image-20200416164520305](assets/image-20200416164520305.png)
 
-Git 不按照以上方式对待或保存数据。反之，Git 更像是把数据看作是对小型文件系统的一组快照。每次你提交更新，或在 Git 中保存项目状态时，它主要对当时的全部文件制作一个快照并保存这个快照的索引。为了高效，如果文件没有修改，Git 不再重新存储该文件，而是只保留一个链接指向之前存储的文件。Git 对待数据更像是一个 快照流。
+Git不按照以上方式对待或保存数据。反之，Git 更像是把数据看作是对小型文件系统的一组快照。每次你提交更新，或在Git中保存项目状态时，它主要对当时的全部文件制作一个快照并保存这个快照的索引。为了高效，如果文件没有修改，Git不再重新存储该文件，而是只保留一个链接指向之前存储的文件。Git对待数据更像是一个 快照流。
 
 ![image-20200416164556205](assets/image-20200416164556205.png)
 
@@ -27,11 +25,11 @@ Git不是直接操作服务器上的仓库（先fetch到本地），Git的绝大
 
 ### 保证完整性
 
-Git 用以SHA-1算法计算数据的校验和，通过对文件的内容或目录的结构计算出一个SHA-1哈希值，作为指纹字符串。该字符串由40位16进制字符组成，看起来就像是：
+Git用以SHA-1算法计算数据的校验和，通过对文件的内容或目录的结构计算出一个SHA-1哈希值，作为指纹字符串。该字符串由40位16进制字符组成，看起来就像是：
 
 `24b9da6552252987aa493b52f8696cd6d3b00373`
 
-Git 数据库中保存的信息都是以文件内容的哈希值来索引，而不是文件名。
+Git数据库中保存的信息都是以文件内容的哈希值来索引，而不是文件名。
 
 ### Git一般只添加数据
 
@@ -70,8 +68,19 @@ Git 仓库目录是 Git 用来保存项目的元数据和对象数据库的地�
 
 ## 安装Git
 
+**RPM包安装**
+
 ```BASH
 [10.208.3.20 root@test-3:~]# yum install git -y
+```
+
+**如果采用源码安装，可以使用下面这个技巧**
+
+如果是源码安装的话就进入都contrib/completion目录，找到git-completion.bash文件，将其复制到/etc/bash_completion.d目录中。这个文件可以实现<TAB><TAB>自动补全的功能
+
+```BASH
+[10.208.3.20 root@test-3:~/testapp]# rpm -qf /etc/bash_completion.d/git
+git-1.8.3.1-21.el7_7.x86_64
 ```
 
 ## 初次运行Git前的配置
@@ -123,8 +132,6 @@ color.diff=auto
 $ git config user.name
 Scott Chacon
 ```
-
-
 
 # Git基础
 
@@ -1131,6 +1138,15 @@ testing 5ea463a trying something new
 
 需要重点注意的一点是这些数字的值来自于你从每个服务器上最后一次抓取的数据。这个命令并没有连接服务器，它只会告诉你关于本地缓存的服务器数据。如果想要统计最新的领先与落后数字，需要在运行此命令前抓取所有的远程仓库。可以像这样做：`git fetch --all; git branch -vv`
 
+在检出分支的时候也可以看到这样的信息
+
+```BASH
+[10.208.3.20 root@test-3:/tmp/testapp]# git checkout master 
+Switched to branch 'master'
+Your branch is behind 'testapp/master' by 5 commits, and can be fast-forwarded.
+  (use "git pull" to update your local branch)
+```
+
 **注意：当设置好跟踪分支后，可以通过 @{upstream} 或 @{u} 快捷方式来引用它。所以在 master分支且它正在跟踪 origin/master 时，如果愿意的话可以使用 git merge @{u} 来取代 git merge origin/master。**
 
 ### 拉取分支
@@ -1143,13 +1159,23 @@ git clone=fetch+checkout
 
 ### 删除远程分支
 
-这个命令做的只是从服务器上移除这指针。Git 服务器通常会保留数据一段时间直到垃圾回收运行，所以如果不小心删除掉了，通常是很容易恢复的（对于懂得人来说......）。
+**方式1**
 
 ```BASH
 $ git push origin --delete serverfix
 To https://github.com/schacon/simplegit
 - [deleted] serverfix
 ```
+
+**方式2**
+
+```BASH
+[10.208.3.20 root@test-3:/tmp/testapp]# git push testapp :master2
+To git@github.com:AllenLTB/testapp.git
+ - [deleted]         master2
+```
+
+
 
 ## 变基
 
@@ -1616,4 +1642,72 @@ and the repository exists.
 
 其实，如果有上次的仓库备份（比如是cp了一份），那么直接替换仓库即可。
 
+### Smart HTTP
+
+设置 Smart HTTP 一般只需要在服务器上启用一个 Git 自带的名为 git-http-backend 的 CGI 脚本。该CGI 脚本将会读取由 git fetch 或 git push 命令向 HTTP URL 发送的请求路径和头部信息，来判断该客户端是否支持 HTTP 通信（不低于 1.6.6 版本的客户端支持此特性）。如果 CGI 发现该客户端支持智能（Smart）模式，它将会以智能模式与它进行通信，否则它将会回落到哑（Dumb）模式下（因此它可以对某些老的客户端实现向下兼容）。
+
+
+
+**安装apache，使用apache作为CGI服务器**
+
+```bash
+[10.208.3.20 root@test-3:~]# yum install httpd
+```
+
+向apache配置文件添加下面这些内容，让git-http-backend作为web服务器对访问/gitrepo路径的请求做处理
+
+```BASH
+<VirtualHost *:80>
+    ServerName gitrepo2.leju.com
+    SetEnv GIT_HTTP_EXPORT_ALL
+    SetEnv GIT_PROJECT_ROOT /opt/gitrepo
+    ScriptAlias /gitrepo/ /usr/libexec/git-core/git-http-backend/
+    <Directory "/usr/libexec/git-core/">
+    Options ExecCGI Indexes
+    Require all granted
+    </Directory>
+</VirtualHost>
+```
+
+如果留空 GIT_HTTP_EXPORT_ALL 这个环境变量，Git 将只对无授权客户端提供带 git-daemon-export-ok文件的版本库，就像 Git 守护进程一样。
+
+**想实现写操作授权验证，添加下面这些配置即可**
+
+```BASH
+<LocationMatch "^/gitrepo/.*/git-receive-pack$">
+AuthType Basic
+AuthName "Git Access"
+AuthUserFile /opt/git/.htpasswd
+Require valid-user
+</LocationMatch>
+```
+
+这需要你创建一个包含所有合法用户密码的 .htaccess 文件。以下是一个添加 “schacon” 用户到此文件的例子：
+
+```BASH
+$ htdigest -c /opt/git/.htpasswd "Git Access" schacon
+```
+
+但是我克隆的时候，出现了下面这个问题，testapp2目录下之后一个.git目录，没有其他文件
+
+```BASH
+[10.208.3.21 root@test-4:/tmp]# git clone http://gitrepo2.leju.com/gitrepo/testapp2.git
+Cloning into 'testapp2'...
+remote: Counting objects: 57, done.
+remote: Compressing objects: 100% (36/36), done.
+remote: Total 57 (delta 23), reused 38 (delta 12)
+Unpacking objects: 100% (57/57), done.
+warning: remote HEAD refers to nonexistent ref, unable to checkout.
+```
+
+原因是.git目录下.git/refs/heads不存在HEAD指向的文件，这个时候可以用git show-ref命令查看。
+
+后来我重新生成了一下服务器端的仓库，就没这个问题了。
+
+**至于说push，我一直没有实现出来，不管是否启用认证，总是报错403**
+
+```BASH
+[10.208.3.21 root@test-4:/tmp/testapp2]# git push http://litianbao:123123@gitrepo2.leju.com/gitrepo/testapp2.git master
+fatal: unable to access 'http://litianbao:123123@gitrepo2.leju.com/gitrepo/testapp2.git/': The requested URL returned error: 403
+```
 
