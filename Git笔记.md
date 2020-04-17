@@ -2,6 +2,8 @@
 
 [TOC]
 
+此笔记是读[ProGit](https://www.progit.cn/)之后写的，大部分内容（包括图片）都是直接从书中复制下来的。
+
 # Git起步
 
 ## Git基础
