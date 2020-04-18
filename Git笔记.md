@@ -2685,9 +2685,9 @@ a11bef0..ca82a6d master -> master
 
 ## 包文件
 
-主要是说git如何通过打包对象减少了磁盘空间占用的。参考**[ProGit](https://www.progit.cn/)**一书即可。
+**主要是说git如何通过打包对象减少了磁盘空间占用的。参考[ProGit](https://www.progit.cn/)一书即可。**
 
-这回涉及到object目录下的pack目录及其下的文件。
+这会涉及到object目录下的pack目录及其下的文件。
 
 ## 引用规格
 
@@ -2704,7 +2704,7 @@ $ git remote add origin https://github.com/schacon/simplegit-progit
 url = https://github.com/schacon/simplegit-progit
 ```
 
-复杂的映射方式此处不做介绍，参考**[ProGit](https://www.progit.cn/)**一书即可。
+**复杂的映射方式此处不做介绍，参考[ProGit](https://www.progit.cn/)一书即可。**
 
 **引用规格推送**
 
@@ -2722,4 +2722,3 @@ url = https://github.com/schacon/simplegit-progit
 fetch = +refs/heads/*:refs/remotes/origin/*
 push = refs/heads/master:refs/heads/qa/master
 ```
-
