@@ -347,8 +347,6 @@ rm 'password4'
 
 ## 对文件改名
 
-it中的文件进行改名**
-
 `git mv <oldname> <newname>`
 
 ```BASH
@@ -1473,7 +1471,7 @@ error: failed to push some refs to 'gituser1@10.208.3.20:/opt/gitrepo/testapp2.g
 [10.208.3.20 root@test-3:/gitosis]# rm -rf /root/.ssh/authorized_keys
 ```
 
-**初始化Gitosis **
+**初始化Gitosis**
 
 使用上面创建的gituser1用户，并通过管理员的公钥来运行gitosis-init。Gitosis会将它的仓库放到gituser1家目录下的repositories目录中
 
