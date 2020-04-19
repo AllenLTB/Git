@@ -1,6 +1,6 @@
 # CE or EE
 
-它们的许可模型不一样。CE是开源的，使用MIT Expat license。EE是是基于CE的，它使用了与CE的一些相同核心，但在此之上添加了一些额外的特性和功能。这是在专有许可下的。
+CE是开源的，使用MIT Expat license。EE是是基于CE的，它使用了与CE的一些相同核心，但在此之上添加了一些额外的特性和功能，这些是在专有许可下的。
 
 - 使用EE版本：如果有许可你就可以体验到EE的特性。如果你没有许可，你仅可以使用到MIT许可的功能。这意味着如果你安装了EE但是没有许可，你不会发现和典型的CE有什么不同，但是还有其他优点：
   - 如果你想体验EE的特性，你无需升级或设置一个新的实例。你在Gitlab上启用使用试用版即可。如果你对EE的特性不满意，在试用期结束后他会自动恢复为仅Community Edition功能。
@@ -8,13 +8,13 @@
 
 - 使用CE版本：不包含特殊的代码。功能上它和没有许可的EE版本是一样的。如果你想要升级到EE版本，会有停机时间。
 
-
-
 # GitLab Installation on Centos7
 
-强烈建议下载Omnibus软件包安装程序，因为它安装速度更快，升级更容易，并且包含增强其他方法所没有的可靠性的功能。强烈建议在至少有4GB的可用RAM的机器上运行GitLab。
+下面部署的是Omnibus软件包安装程序，它安装速度更快，升级更容易，并且包含增强其他方法所没有的可靠性的功能。
 
-安装必要的依赖，并在防火墙上打开80和443端口
+注意：GitLab需要运行在至少有4GB的可用RAM的机器上。
+
+**安装必要的依赖，并在防火墙上打开80和443端口**
 
 ```bash
 $ yum install -y curl policycoreutils-python openssh-server
@@ -25,9 +25,9 @@ sudo firewall-cmd --permanent --add-service=https
 sudo systemctl reload firewalld
 ```
 
+**安装Postfix来发送通知邮件**
 
-
-安装Postfix来发送通知邮件。如果你有其他外部解决方案可以跳过这步
+如果你有其他外部解决方案可以跳过这步
 
 ```bash
 $ yum install postfix
@@ -35,38 +35,34 @@ $ systemctl enable postfix
 $ systemctl start postfix
 ```
 
-
-
-添加Gitlab的repo并安装它
+**添加Gitlab的repo并安装它**
 
 ```BASH
 $ curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.rpm.sh | sudo bash
 ```
 
+**安装Gitlab包**
 
-
-安装Gitlab包，更改https://gitlab-netadm.leju.com为你将要用来访问Gitlab实例的URL。安装时将会自动配置并使用这个URL启动Gitlab
-
-如果指定一个https://的URL将会自动使用Let's Encrypt请求证书。你也可以[使用自己的证书](https://docs.gitlab.com/omnibus/settings/nginx.html#manually-configuring-https)或指定为http://的URL
+更改`https://gitlab-netadm.leju.com`为你将要用来访问Gitlab实例的URL。安装时将会自动配置并使用这个URL启动Gitlab。如果指定一个`https://`的URL将会自动使用Let's Encrypt请求证书。你也可以[使用自己的证书](https://docs.gitlab.com/omnibus/settings/nginx.html#manually-configuring-https)或指定为`http://`的URL
 
 ```bash
-$ sudo EXTERNAL_URL="https://gitlab-netadm.leju.com" yum install -y gitlab-ee
+$ EXTERNAL_URL="https://gitlab-netadm.leju.com" yum install -y gitlab-ee
 ```
+
+**登录**
 
 安装完之后，你的第一次访问，将被重定向到密码重置页面。你输入了初始管理员密码之后你将重定向到登录页面。使用默认的账户名root+初始密码进行登录。
 
+**如果有统一的nginx反代做SSL终结，则只在Gitlab上启用http即可**
 
-
-因为我们内部有统一的nginx反代做SSL终结，所以Gitlab上不需要SSL，启用http即可。
-
-默认情况下如果external_url包含了https://，Gitlab的nginx将自动检测是否使用SSL。如果你的Gitlab在反代之后运行，你可能希望在反代上终结SSL。为此，请确保external_url包含https://并将以下配置应用于gitlab.rb：
+默认情况下如果external_url包含了`https://`，Gitlab的nginx将自动检测是否使用SSL。如果你的Gitlab在反代之后运行，你可能希望在反代上终结SSL。为此，请确保external_url包含`https://`并将以下配置应用于gitlab.rb：
 
 ```BASH
 nginx['listen_port'] = 80
 nginx['listen_https'] = false
 ```
 
-其他的捆绑组将 (Registry, Pages, etc)使用对代理SSL使用类似的策略。使用https://设置特定组件的`* _external_url`，并在nginx [...]配置前添加组件名称。例如，对于Registry，请使用以下配置：
+其他的捆绑组将 (Registry, Pages, etc)使用对代理SSL使用类似的策略。使用`https://`设置特定组件的`* _external_url`，并在nginx [...]配置前添加组件名称。例如，对于Registry，请使用以下配置：
 
 ```BASH
 registry_external_url 'https://registry.example.com'
@@ -228,8 +224,6 @@ Total 3 (delta 0), reused 0 (delta 0)
 To https://gitlab-netadm.leju.com/root/testapp.git
    7d6603b..c7d3319  master -> master
 ```
-
-
 
 # 实例2：没有统一的反代来终结SSL，Gitlab以https对外提供服务
 
