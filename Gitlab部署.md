@@ -248,3 +248,56 @@ nginx['real_ip_recursive'] = 'off'
 nginx['log_format'] = '$remote_addr [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" "$http_x_forwarded_for"'
 ```
 
+# FQA
+
+**项目维护者强制PUSH报错: ”remote: GitLab: You are not allowed to force push code to a protected branch on this project.“**
+
+```BASH
+[10.208.3.23 root@test-5:/tmp/Git2]# git push --force origin master 
+Username for 'https://gitlab-netadm.leju.com': root
+Password for 'https://root@gitlab-netadm.leju.com': 
+Counting objects: 9, done.
+Delta compression using up to 2 threads.
+Compressing objects: 100% (6/6), done.
+Writing objects: 100% (9/9), 824 bytes | 0 bytes/s, done.
+Total 9 (delta 0), reused 0 (delta 0)
+remote: GitLab: You are not allowed to force push code to a protected branch on this project.
+To https://gitlab-netadm.leju.com/root/Git.git
+ ! [remote rejected] master -> master (pre-receive hook declined)
+error: failed to push some refs to 'https://gitlab-netadm.leju.com/root/Git.git'
+```
+
+这是因为master分支默认开启了Protected Branches，此功能禁止任何人强制PUSH。所以想要强制PUSH只能在此分支上关掉此功能。
+
+进入项目gitlab网页版---进入项目---点击settings---点击Repository---找到Protected Branches---把在master分支的条目上点击unprotecte
+
+![image-20200419183513969](.assets/image-20200419183513969.png)
+
+![image-20200419183453621](.assets/image-20200419183453621.png)
+
+
+
+**项目维护者执行PUSH报错: ”error: RPC failed; HTTP 413 curl 22 The requested URL returned error: 413“**
+
+```BASH
+$ git push Gitlab-Git master
+Enumerating objects: 66, done.
+Counting objects: 100% (66/66), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (66/66), done.
+error: RPC failed; HTTP 413 curl 22 The requested URL returned error: 413
+fatal: the remote end hung up unexpectedly
+Writing objects: 100% (66/66), 3.36 MiB | 6.56 MiB/s, done.
+Total 66 (delta 15), reused 0 (delta 0), pack-reused 0
+fatal: the remote end hung up unexpectedly
+Everything up-to-date
+```
+
+这是因为该分支的大小超过了nginx（也有可能是其他应用）中设置的客户端request body的最大大小。
+
+解决方法是在nginx配置文件中上gitlab的server块中增加下面这条配置：
+
+```BASH
+client_max_body_size 30M;
+```
+
