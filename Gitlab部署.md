@@ -341,7 +341,7 @@ EOS
 [10.208.3.20 root@test-3:~]# gitlab-ctl reconfigure
 ```
 
-使用LDAP的用户登录
+**使用LDAP的用户登录**
 
 ![image-20200419201217241](.assets/image-20200419201217241.png)
 
