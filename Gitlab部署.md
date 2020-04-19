@@ -10,7 +10,7 @@ CE是开源的，使用MIT Expat license。EE是是基于CE的，它使用了与
 
 # GitLab Installation on Centos7
 
-下面部署的是Omnibus软件包安装程序，它安装速度更快，升级更容易，并且包含增强其他方法所没有的可靠性的功能。
+下面部署的是Omnibus软件包安装程序（12.9.3-ee ），它安装速度更快，升级更容易，并且包含增强其他方法所没有的可靠性的功能。
 
 注意：GitLab需要运行在至少有4GB的可用RAM的机器上。
 
@@ -241,6 +241,113 @@ nginx['real_ip_header'] = 'X-Real-IP'
 nginx['real_ip_recursive'] = 'off'
 nginx['log_format'] = '$remote_addr [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" "$http_x_forwarded_for"'
 ```
+
+# SMTP设置
+
+**在/etc/gitlab/gitlab.rb文件中增加下面这些内容，来使用SMTP来替代Postfix**
+
+```BASH
+gitlab_rails['smtp_enable'] = true
+gitlab_rails['smtp_address'] = "mail.leju.com"
+gitlab_rails['smtp_port'] = 25
+gitlab_rails['smtp_user_name'] = "monitor@leju.com"
+gitlab_rails['smtp_password'] = "xxxxxx"
+gitlab_rails['smtp_domain'] = "leju.com"
+gitlab_rails['smtp_authentication'] = "login"
+gitlab_rails['smtp_enable_starttls_auto'] = true
+gitlab_rails['smtp_tls'] = false
+gitlab_rails['gitlab_email_from'] = "monitor@leju.com"
+gitlab_rails['gitlab_email_reply_to'] = "monitor@leju.com"
+```
+
+**重新生成配置**
+
+```BASH
+[10.208.3.20 root@test-3:~]# gitlab-ctl reconfigure
+```
+
+**测试**
+
+```BASH
+[10.208.3.20 root@test-3:~]# gitlab-rails console
+--------------------------------------------------------------------------------
+ GitLab:       12.9.3-ee (7c13691fb8e) EE
+ GitLab Shell: 12.0.0
+ PostgreSQL:   10.12
+--------------------------------------------------------------------------------
+Loading production environment (Rails 6.0.2)
+irb(main):001:0> Notify.test_email('test@leju.com', 'test', 'test body').deliver_now
+Notify#test_email: processed outbound mail in 1.1ms
+Delivered mail 5e9c3c4eb268f_11f2f3fa6d72cf9a86944@test-3.mail (327.0ms)
+Date: Sun, 19 Apr 2020 19:55:58 +0800
+From: GitLab <monitor@leju.com>
+Reply-To: GitLab <monitor@leju.com>
+To: test@leju.com
+Message-ID: <5e9c3c4eb268f_11f2f3fa6d72cf9a86944@test-3.mail>
+Subject: test
+Mime-Version: 1.0
+Content-Type: text/html;
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Auto-Submitted: auto-generated
+X-Auto-Response-Suppress: All
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html><body><p>test body</p></body></html>
+
+=> #<Mail::Message:69985327306360, Multipart: false, Headers: <Date: Sun, 19 Apr 2020 19:55:58 +0800>, <From: GitLab <monitor@leju.com>>, <Reply-To: GitLab <monitor@leju.com>>, <To: test@leju.com>, <Message-ID: <5e9c3c4eb268f_11f2f3fa6d72cf9a86944@test-3.mail>>, <Subject: test>, <Mime-Version: 1.0>, <Content-Type: text/html; charset=UTF-8>, <Content-Transfer-Encoding: 7bit>, <Auto-Submitted: auto-generated>, <X-Auto-Response-Suppress: All>>
+```
+
+![image-20200419200833436](.assets/image-20200419200833436.png)
+
+# LDAP设置
+
+**在/etc/gitlab/gitlab.rb文件中增加下面这些内容**
+
+```BASH
+gitlab_rails['ldap_enabled'] = true
+gitlab_rails['prevent_ldap_sign_in'] = false
+gitlab_rails['ldap_servers'] = YAML.load <<-EOS
+ldap:
+  enable: true
+  servers:
+  label: 'LDAP'
+  host: '10.208.3.13'
+  port: 389
+  uid: 'cn'
+  encryption: 'plain'
+  bind_dn: 'cn=replicator,dc=ljldap,dc=com'
+  password: '123456'
+  timeout: '10'
+  smartcard_auth: false
+  active_directory: false
+  allow_username_or_email_login: false
+  lowercase_usernames: false
+  block_auto_created_users: false
+  base: 'ou=netadm,dc=ljldap,dc=com'
+  user_filter: ''
+  attributes:
+  username: ['cn', 'uid', 'userid', 'sAMAccountName']
+  email: ['mail', 'email', 'userPrincipalName']
+  name: 'cn'
+  first_name: 'givenName'
+  last_name: 'sn'
+EOS
+```
+
+**重新生成配置**
+
+```BASH
+[10.208.3.20 root@test-3:~]# gitlab-ctl reconfigure
+```
+
+使用LDAP的用户登录
+
+![image-20200419201217241](.assets/image-20200419201217241.png)
+
+使用管理员查看这个用户，可以看到
+
+![image-20200419201146102](.assets/image-20200419201146102.png)
 
 # FQA
 
