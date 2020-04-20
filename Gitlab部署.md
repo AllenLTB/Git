@@ -79,6 +79,12 @@ registry_nginx['listen_port'] = 80
 registry_nginx['listen_https'] = false
 ```
 
+**关闭用户注册登录功能**
+
+注意：看对了，不要更改Sign-in restrictions，否则会导致所有用户无法登陆。
+
+![image-20200420174310257](.assets/image-20200420174310257.png)
+
 # 实例1：有统一的反代来终结SSL，Gitlab以http方式运行
 
 **更改gitlab的配置文件**
