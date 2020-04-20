@@ -1,3 +1,12 @@
+**[Gitlab的备份/恢复、迁移](#Gitlab的备份/恢复、迁移)部分转自[散尽浮华的博客](https://www.cnblogs.com/kevingrace/p/5985918.html)**
+
+[TOC]
+
+# GitLab简介
+
+GitLab 是一个用于仓库管理系统的开源项目，使用Git作为代码管理工具，并在此基础上搭建起来的web服务。可通过Web界面进行访问公开的或者私人项目。它拥有与Github类似的功能，能够浏览源代码，管理缺陷和注释。可以管理团队对仓库的访问，它非常易于浏览提交过的版本并提供一个文件历史库。团队成员可以利用内置的简单聊天程序(Wall)进行交流。它还提供一个代码片段收集功能可以轻松实现代码复用。
+版本：GitLab分为社区版（CE） 和企业版（EE）
+
 # CE or EE
 
 CE是开源的，使用MIT Expat license。EE是是基于CE的，它使用了与CE的一些相同核心，但在此之上添加了一些额外的特性和功能，这些是在专有许可下的。
@@ -298,9 +307,11 @@ X-Auto-Response-Suppress: All
 => #<Mail::Message:69985327306360, Multipart: false, Headers: <Date: Sun, 19 Apr 2020 19:55:58 +0800>, <From: GitLab <monitor@leju.com>>, <Reply-To: GitLab <monitor@leju.com>>, <To: test@leju.com>, <Message-ID: <5e9c3c4eb268f_11f2f3fa6d72cf9a86944@test-3.mail>>, <Subject: test>, <Mime-Version: 1.0>, <Content-Type: text/html; charset=UTF-8>, <Content-Transfer-Encoding: 7bit>, <Auto-Submitted: auto-generated>, <X-Auto-Response-Suppress: All>>
 ```
 
-![image-20200419200833436](.assets/image-20200419200833436.png)
+![image-20200420152129051](.assets/image-20200420152129051.png)
 
 # LDAP设置
+
+如果在配置上有疑问可参考[官方文档](https://docs.gitlab.com/ee/administration/auth/ldap.html)
 
 **在/etc/gitlab/gitlab.rb文件中增加下面这些内容**
 
@@ -310,28 +321,31 @@ gitlab_rails['prevent_ldap_sign_in'] = false
 gitlab_rails['ldap_servers'] = YAML.load <<-EOS
 ldap:
   enable: true
-  servers:
-  label: 'LDAP'
+  ##该配置表示使用LDAP账号登录时显示的界面提示信息。
+  label: 'LEJU LDAP'
   host: '10.208.3.13'
   port: 389
+  ##这个表示可以使用cn名称登录
   uid: 'cn'
   encryption: 'plain'
   bind_dn: 'cn=replicator,dc=ljldap,dc=com'
   password: '123456'
   timeout: '10'
   smartcard_auth: false
+  ##设置为failse表示，这个ldap不是微软的AD（我用的是openldap）
   active_directory: false
+  ##不允许使用username或email属性进行登录
   allow_username_or_email_login: false
   lowercase_usernames: false
   block_auto_created_users: false
   base: 'ou=netadm,dc=ljldap,dc=com'
-  user_filter: ''
   attributes:
-  username: ['cn', 'uid', 'userid', 'sAMAccountName']
-  email: ['mail', 'email', 'userPrincipalName']
-  name: 'cn'
-  first_name: 'givenName'
-  last_name: 'sn'
+  	##username将用于用户自己项目的路径，例如gitlab.example.com/username/project，或当问题，合并请求和注释中有他时，显示为@username。如果username指定为一个email地址，则只会提取@前面的内容作为username
+    username: ['cn', 'mail']
+    email: ['mail', 'email', 'userPrincipalName']
+    name: 'sn'
+    first_name: 'givenName'
+    last_name: 'sn'
 EOS
 ```
 
@@ -341,13 +355,102 @@ EOS
 [10.208.3.20 root@test-3:~]# gitlab-ctl reconfigure
 ```
 
-**使用LDAP的用户登录**
+**检查LDAP信息是否成功同步过来**
 
-![image-20200419201217241](.assets/image-20200419201217241.png)
+````BASH
+[10.208.3.20 root@test-3:~]#  gitlab-rake gitlab:ldap:check
+Checking LDAP ...
 
-使用管理员查看这个用户，可以看到
+LDAP: ... Server: ldapldap
+LDAP authentication... Success
+LDAP users with access to your GitLab server (only showing the first 100 results)
+	DN: cn=xxxx1,ou=netadm,dc=ljldap,dc=com	 cn: xxxx1
+	DN: cn=xxxx2,ou=netadm,dc=ljldap,dc=com	 cn: xxxx2
 
-![image-20200419201146102](.assets/image-20200419201146102.png)
+Checking LDAP ... Finished
+````
+
+**使用LDAP的用户登录（只有登录后Gitlab中才可以看到这个用户）**
+
+![image-20200420151516541](.assets/image-20200420151516541.png)
+
+使用管理员账户查看这个用户的信息，可以看到
+
+![image-20200420151135275](.assets/image-20200420151135275.png)
+
+# Gitlab的备份/恢复、迁移
+
+使用Gitlab一键安装包安装Gitlab非常简单, 同样的备份恢复与迁移也非常简单. 使用一条命令即可创建完整的Gitlab备份
+
+```BASH
+# gitlab-rake gitlab:backup:create
+比如使用以上命令会在/var/opt/gitlab/backups目录下创建一个名称类似为1481598919_gitlab_backup.tar的压缩包, 这个压缩包就是Gitlab整个的完整部分,
+其中开头的1481598919是备份创建的日期。
+
+/etc/gitlab/gitlab.rb 配置文件须备份
+/var/opt/gitlab/nginx/conf nginx配置文件
+/etc/postfix/main.cfpostfix 邮件配置备份
+```
+
+**备份目录路径设置**
+
+```BASH
+[root@code-server ~]# vim /etc/gitlab/gitlab.rb
+gitlab_rails['manage_backup_path'] = true
+gitlab_rails['backup_path'] = "/data/gitlab/backups"    //gitlab备份目录
+gitlab_rails['backup_archive_permissions'] = 0644       //生成的备份文件权限
+gitlab_rails['backup_keep_time'] = 7776000              //备份保留天数为3个月（即90天，这里是7776000秒）
+```
+
+**自动备份**
+
+实现每天凌晨2点进行一次自动备份:通过crontab使用备份命令实现
+
+```BASH
+[root@code-server ~]# crontab -e
+0 2 * * * /opt/gitlab/bin/gitlab-rake gitlab:backup:create
+```
+
+**恢复备份**
+
+```BASH
+1）停止相关数据连接服务
+# gitlab-ctl stop unicorn
+# gitlab-ctl stop sidekiq
+ 
+2）从1481598919编号备份中恢复
+# gitlab-rake gitlab:backup:restore BACKUP=1481598919
+ 
+3）启动Gitlab
+# gitlab-ctl start
+```
+
+**迁移**
+
+> 要求：新服务器的gitlab版本与旧的服务器相同。
+
+迁移如同备份与恢复的步骤一样, 只需要将老服务器/var/opt/gitlab/backups目录下的备份文件拷贝到新服务器上的/var/opt/gitlab/backups即可(如果你没修改过默认备份目录的话).
+
+但是需要注意的是：
+
+- 新服务器上的Gitlab的版本必须与创建备份时的Gitlab版本号相同. 比如新服务器安装的是最新的7.60版本的Gitlab, 那么迁移之前, 最好将老服务器的Gitlab 升级为7.60在进行备份.
+
+- /etc/gitlab/gitlab.rb         这个gitlab配置文件须迁移,迁移后需要调整数据存放目录
+
+- /var/opt/gitlab/nginx/conf    这个nginx配置文件目录须迁移
+
+- /etc/gitlab/gitlab-secrets.json    #复制新服务器相同的目录下
+
+- /etc/ssh/*key*                #复制到新服务器相同目录下，解决ssh key认证不成功问题
+
+```BASH
+# gitlab-ctl stop unicorn
+# gitlab-ctl stop sidekiq
+# chmod 777 /var/opt/gitlab/backups/1481598919_gitlab_backup.tar  # 或 chown git:git /var/opt/gitlab/backups/1481598919_gitlab_backup.tar
+# gitlab-rake gitlab:backup:restore BACKUP=1481598919
+```
+
+
 
 # FQA
 
