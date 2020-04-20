@@ -349,6 +349,8 @@ ldap:
 EOS
 ```
 
+注：不同用户的邮箱不能一样，否则会互相覆盖。
+
 **重新生成配置**
 
 ```BASH
@@ -377,6 +379,8 @@ Checking LDAP ... Finished
 使用管理员账户查看这个用户的信息，可以看到
 
 ![image-20200420151135275](.assets/image-20200420151135275.png)
+
+![image-20200420154649752](.assets/image-20200420154649752.png)
 
 # Gitlab的备份/恢复、迁移
 
@@ -479,8 +483,6 @@ error: failed to push some refs to 'https://gitlab-netadm.leju.com/root/Git.git'
 
 ![image-20200419183453621](.assets/image-20200419183453621.png)
 
-
-
 **项目维护者执行PUSH报错: ”error: RPC failed; HTTP 413 curl 22 The requested URL returned error: 413“**
 
 ```BASH
@@ -505,3 +507,26 @@ Everything up-to-date
 client_max_body_size 30M;
 ```
 
+**更改管理员邮箱**
+
+我是用管理员用户登录，然后修改默认的邮箱（Admin@example.com）但是点击确定之后不生效。最后我在console中更改成功了
+
+```BASH
+[10.208.3.20 root@test-3:~]# gitlab-rails c
+--------------------------------------------------------------------------------
+ GitLab:       12.9.3-ee (7c13691fb8e) EE
+ GitLab Shell: 12.0.0
+ PostgreSQL:   10.12
+--------------------------------------------------------------------------------
+Loading production environment (Rails 6.0.2)
+##通过邮箱admin@example.com查找管理员账号,除了通过邮箱的方式找回还可以id=1定位超级管理员(u= User.where(id: 1).first )
+irb(main):001:0> u = User.where(email: 'admin@example.com').first
+=> #<User id:1 @root>
+irb(main):002:0> u.email='netadm@leju.com'
+=> "netadm@leju.com"
+irb(main):003:0> u.save!
+=> true
+irb(main):004:0> quit
+```
+
+设置管理员密码也可以在console中使用`u.password='new_password'`命令
