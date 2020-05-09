@@ -622,6 +622,12 @@ $ git commit --amend
 
 上面的三条命令最终得到一个提交，第二个提交命令修正了第一个的提交内容。
 
+**清除操作**
+
+删除工作区中未跟踪的目录和文件，有时候我们错误的将一个目录解压到工作目录的时候，可以yoghurt
+
+`git clean -d -f` 
+
 **恢复操作**
 
 `git reset --{soft|mixed|hard} <commit>`
@@ -635,6 +641,39 @@ $ git commit --amend
 - hard：版本、索引和工作目录都恢复到指定版本（将HEAD引用指向给定的提交、将索引内容改变为指定提交的快照，并改变工作目录中的内容反映指定提交的内容；）。在此种情况下，无法重现。
 
 ![image-20200416205214088](.assets/image-20200416205214088.png)
+
+
+
+**git暂存区工作区撤销和删除**
+
+1、撤掉
+
+a、如果还没 git add file ，使用该指令进行撤销：  git checkout -- fileName
+
+b、如果已经git add file  ， 但是没有 git commit -m ""  分两步操作：
+
+- git reset HEAD readme.txt
+
+- git  status
+
+- git checkout -- file
+
+c、如果已经git add file 并且已经 git commit ,那么回退版本办法是：
+
+- 通过 git log 或者 git log --pretty=oneline 、git reflog
+- 找到对应的commit id进行回退：git reset --hard 1094a
+
+**2、删除**
+
+现在你有两个选择，一是确实要从版本库中删除该文件，那就用命令git rm删掉，并且git commit：
+
+- git rm test.txt
+- git commit -m "remove test.txt"
+
+另一种情况是删错了，因为版本库里还有呢，所以可以很轻松地把误删的文件恢复到最新版本：
+
+git checkout -- test.txt
+
 
 ## 对比不同
 
