@@ -313,6 +313,77 @@ create mode 100644 passwd
 nothing to commit, working directory clean
 ```
 
+## 告诉Git哪些文件不需要提交到仓库
+
+这可以通过在工作区中添加`.gitignore`文件来实现
+
+**.gitignore文件配置语法**
+
+- 以斜杠/开头表示目录；
+
+- 以星号*通配多个字符；
+
+- 以问号?通配单个字符
+
+- 以方括号[]包含单个字符的匹配列表；
+
+- 以叹号!表示不忽略(跟踪)匹配到的文件或目录；
+
+此外，git 对于 .ignore 配置文件是按行从上到下进行规则匹配的，意味着如果前面的规则匹配的范围更大，则后面的规则将不会生效；
+
+**配置示例**
+
+我的python项目中，`__pycache__`不需要提交到仓库中
+
+```bash
+[10.208.3.3 root@ntp:~/alien_invasion]# git status
+# On branch master
+# Untracked files:
+#   (use "git add <file>..." to include in what will be committed)
+#
+#	__pycache__/
+nothing added to commit but untracked files present (use "git add" to track)
+```
+
+此时我在python项目的工作区中，添加一个.gitignore文件
+
+```BASH
+[10.208.3.3 root@ntp:~/alien_invasion]# cat .ig^C
+[10.208.3.3 root@ntp:~/alien_invasion]# ll -a
+total 36
+drwxr-xr-x   5 root root  192 2020-06-05 14:49:50 .
+dr-xr-x--x. 15 root root 4096 2020-06-05 14:49:50 ..
+-rw-r--r--   1 root root  783 2020-06-05 11:06:55 alien_invasion.py
+-rw-r--r--   1 root root 1190 2020-06-05 12:05:29 game_functions.py
+drwxr-xr-x   8 root root  166 2020-06-05 14:48:17 .git
+-rw-r--r--   1 root root   14 2020-06-05 14:45:19 .gitignore		#这就是添加的文件
+drwxr-xr-x   2 root root   40 2020-06-04 18:59:16 images
+-rw-r--r--   1 root root  369 2020-06-04 19:13:27 maliao.py
+drwxr-xr-x   2 root root  130 2020-06-05 12:09:46 __pycache__
+-rw-r--r--   1 root root  263 2020-06-05 14:24:20 pygame_test.py
+-rw-r--r--   1 root root  293 2020-06-05 10:45:32 settings.py
+-rw-r--r--   1 root root 1326 2020-06-05 12:09:45 ship.py
+[10.208.3.3 root@ntp:~/alien_invasion]# cat .gitignore 				#文件内容如下
+/__pycache__/		#这表示不会将__pycache__目录添加到仓库中
+```
+
+此时再次使用git status就看不到`__pycache__`目录了，但是会看到.gitignore的提示，将这个文件提交到版本库对其进行版本控制即可
+
+```BASH
+[10.208.3.3 root@ntp:~/alien_invasion]# git status
+# On branch master
+# Untracked files:
+#   (use "git add <file>..." to include in what will be committed)
+#
+#	.gitignore
+nothing added to commit but untracked files present (use "git add" to track)
+[10.208.3.3 root@ntp:~/alien_invasion]# git add .
+[10.208.3.3 root@ntp:~/alien_invasion]# git commit -m 202006051454
+[master 2245a2c] 202006051454
+ 1 file changed, 1 insertion(+)
+ create mode 100644 .gitignore
+```
+
 ## 删除Git中的文件
 
 使用系统的rm命令只能删除工作目录下得文件，但是无法删除索引中的记录，对于git中的文件需要使用下面的命令进行删除：
@@ -2251,7 +2322,7 @@ $ git log --left-right master...experiment
 - 默认情况下，git stash 只会储藏已经在索引中的文件。如果指定 --include-untracked 或 -u 标记，Git 也会储藏任何创建的未跟踪文件。
 - 如果指定了 --patch 标记，Git 不会储藏所有修改过的任何东西，但是会交互式地提示哪些改动想要储藏、哪些改动需要保存在工作目录中。
 - git stash命令的 --keep-index 选项。会让Git不储藏任何你通过 git add 命令已暂存的东西。
-- git stash命令的 --all 选项。比--keep-index更加强大，它会吧.gitiignore等其他忽略文件中的模式匹配的文件都储藏。
+- git stash命令的 --all 选项。比--keep-index更加强大，它会吧.gitignore等其他忽略文件中的模式匹配的文件都储藏。
 
 **储藏示例**
 
@@ -2416,7 +2487,7 @@ Would remove test.o
 Would remove tmp/
 ```
 
-默认情况下，git clean 命令只会移除没有忽略的未跟踪文件。任何与 .gitiignore 或其他忽略文件中的模式匹配的文件都不会被移除。如果你也想要移除那些文件，例如为了做一次完全干净的构建而移除所有由构建生成的 .o 文件，可以给 clean 命令增加一个 -x 选项。
+默认情况下，git clean 命令只会移除没有忽略的未跟踪文件。任何与 .gitignore 或其他忽略文件中的模式匹配的文件都不会被移除。如果你也想要移除那些文件，例如为了做一次完全干净的构建而移除所有由构建生成的 .o 文件，可以给 clean 命令增加一个 -x 选项。
 
 ```BASH
 $ git status -s
